@@ -1,0 +1,14 @@
+<paths>
+    <cache-path
+        name="updates"
+        path="updates/" />
+    <external-cache-path
+        name="ext_updates"
+        path="updates/" />
+    <external-files-path
+        name="parking_photos"
+        path="parking_photos/" />
+    <external-path
+        name="ext_files"
+        path="." />
+</paths>

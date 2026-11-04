@@ -1,0 +1,6 @@
+{
+  "name": "FermataEX",
+  "description": "Media player with Android Auto support and external video handoff",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

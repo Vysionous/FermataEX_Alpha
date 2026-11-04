@@ -1,0 +1,26 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <me.aap.fermata.addon.web.stremio.StremioWebView
+        android:id="@+id/browserWebView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Android Auto has no system Back; sits over Stremio's 84x77 logo slot / own back button. -->
+    <ImageButton
+        android:id="@+id/stremioCarBackButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="start|top"
+        android:layout_margin="14dp"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:id="@+id/browserFullScreenView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+</FrameLayout>

@@ -1,0 +1,358 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Optional, opt-in only (TripModePolicy): keeps GPS while another app covers the car screen. -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <!-- A legacy Android Auto SDK has targetSdk < 4, which makes the manifest merger imply
+         these unrelated permissions unless they are explicitly removed. -->
+    <uses-permission
+        android:name="android.permission.READ_PHONE_STATE"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:node="remove" />
+
+    <permission
+        android:name="${applicationId}.permission.WRITE_FERMATA_CONTENT"
+        android:protectionLevel="signature" />
+
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.wifi"
+        android:required="false" />
+
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+
+    <queries>
+        <package android:name="com.google.android.projection.gearhead" />
+        <package android:name="com.huawei.systemmanager" />
+        <package android:name="com.hihonor.systemmanager" />
+        <package android:name="com.miui.securitycenter" />
+        <package android:name="com.coloros.safecenter" />
+        <package android:name="com.oplus.safecenter" />
+        <package android:name="com.oneplus.security" />
+        <package android:name="com.iqoo.secure" />
+        <package android:name="com.vivo.permissionmanager" />
+        <intent>
+            <action android:name="android.intent.action.OPEN_DOCUMENT_TREE" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+        </intent>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+        <intent>
+            <action android:name="android.speech.tts.engine.INSTALL_TTS_DATA" />
+        </intent>
+    </queries>
+
+    <application
+        android:name="me.aap.fermata.FermataApplication"
+		android:allowBackup="false"
+        android:banner="@drawable/banner"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_descriptor"
+        android:icon="@drawable/launcher"
+        android:label="@string/app_name"
+        android:launchMode="singleTop"
+        android:requestLegacyExternalStorage="true"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme.Dark"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="UPSIDE_DOWN_CAKE">
+
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+        <meta-data
+            android:name="com.google.android.gms.car.notification.SmallIcon"
+            android:resource="@drawable/launcher" />
+        <meta-data
+            android:name="androidx.car.app.TintableAttributionIcon"
+            android:resource="@drawable/notification" />
+        <meta-data
+            android:name="com.google.android.gms.car.application.theme"
+            android:resource="@style/AppTheme.Dark" />
+
+        <activity
+            android:name="me.aap.fermata.ui.activity.MainActivity"
+            android:configChanges="colorMode|keyboard|keyboardHidden|locale|mcc|mnc|navigation|orientation|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:resizeableActivity="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="fermata" />
+                <data android:host="open" />
+                <data android:host="play" />
+            </intent-filter>
+
+            <!-- Local document import, not an HTTP(S) app link; hosts do not apply. -->
+            <intent-filter tools:ignore="AppLinkUrlError">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:pathSuffix=".fxd" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="*" />
+
+                <!-- Comprehensive media file patterns for URI viewing without MIME types -->
+                <data android:pathPattern=".*\\.mp4" />
+                <data android:pathPattern=".*\\.MP4" />
+                <data android:pathPattern=".*\\.mkv" />
+                <data android:pathPattern=".*\\.MKV" />
+                <data android:pathPattern=".*\\.avi" />
+                <data android:pathPattern=".*\\.AVI" />
+                <data android:pathPattern=".*\\.mov" />
+                <data android:pathPattern=".*\\.MOV" />
+                <data android:pathPattern=".*\\.wmv" />
+                <data android:pathPattern=".*\\.WMV" />
+                <data android:pathPattern=".*\\.flv" />
+                <data android:pathPattern=".*\\.FLV" />
+                <data android:pathPattern=".*\\.ts" />
+                <data android:pathPattern=".*\\.TS" />
+                <data android:pathPattern=".*\\.m2ts" />
+                <data android:pathPattern=".*\\.M2TS" />
+                <data android:pathPattern=".*\\.mts" />
+                <data android:pathPattern=".*\\.MTS" />
+                <data android:pathPattern=".*\\.vob" />
+                <data android:pathPattern=".*\\.VOB" />
+                <data android:pathPattern=".*\\.mpg" />
+                <data android:pathPattern=".*\\.MPG" />
+                <data android:pathPattern=".*\\.mpeg" />
+                <data android:pathPattern=".*\\.MPEG" />
+                <data android:pathPattern=".*\\.rm" />
+                <data android:pathPattern=".*\\.RM" />
+                <data android:pathPattern=".*\\.rmvb" />
+                <data android:pathPattern=".*\\.RMVB" />
+                <data android:pathPattern=".*\\.webm" />
+                <data android:pathPattern=".*\\.WEBM" />
+                <data android:pathPattern=".*\\.3gp" />
+                <data android:pathPattern=".*\\.3GP" />
+                <data android:pathPattern=".*\\.asf" />
+                <data android:pathPattern=".*\\.ASF" />
+                <data android:pathPattern=".*\\.ogv" />
+                <data android:pathPattern=".*\\.OGV" />
+                <data android:pathPattern=".*\\.iso" />
+                <data android:pathPattern=".*\\.ISO" />
+                <data android:pathPattern=".*\\.mp3" />
+                <data android:pathPattern=".*\\.MP3" />
+                <data android:pathPattern=".*\\.flac" />
+                <data android:pathPattern=".*\\.FLAC" />
+                <data android:pathPattern=".*\\.ape" />
+                <data android:pathPattern=".*\\.APE" />
+                <data android:pathPattern=".*\\.wv" />
+                <data android:pathPattern=".*\\.WV" />
+                <data android:pathPattern=".*\\.opus" />
+                <data android:pathPattern=".*\\.OPUS" />
+                <data android:pathPattern=".*\\.wav" />
+                <data android:pathPattern=".*\\.WAV" />
+                <data android:pathPattern=".*\\.ogg" />
+                <data android:pathPattern=".*\\.OGG" />
+                <data android:pathPattern=".*\\.oga" />
+                <data android:pathPattern=".*\\.OGA" />
+                <data android:pathPattern=".*\\.m4a" />
+                <data android:pathPattern=".*\\.M4A" />
+                <data android:pathPattern=".*\\.aac" />
+                <data android:pathPattern=".*\\.AAC" />
+                <data android:pathPattern=".*\\.wma" />
+                <data android:pathPattern=".*\\.WMA" />
+                <data android:pathPattern=".*\\.tta" />
+                <data android:pathPattern=".*\\.TTA" />
+                <data android:pathPattern=".*\\.alac" />
+                <data android:pathPattern=".*\\.ALAC" />
+                <data android:pathPattern=".*\\.aiff" />
+                <data android:pathPattern=".*\\.AIFF" />
+                <data android:pathPattern=".*\\.mka" />
+                <data android:pathPattern=".*\\.MKA" />
+                <data android:pathPattern=".*\\.m3u" />
+                <data android:pathPattern=".*\\.M3U" />
+                <data android:pathPattern=".*\\.m3u8" />
+                <data android:pathPattern=".*\\.M3U8" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:mimeType="video/*" />
+                <data android:mimeType="audio/*" />
+                <data android:mimeType="*/rmvb" />
+                <data android:mimeType="*/avi" />
+                <data android:mimeType="*/mkv" />
+                <data android:mimeType="application/3gpp*" />
+                <data android:mimeType="application/mp4" />
+                <data android:mimeType="application/mpeg*" />
+                <data android:mimeType="application/ogg" />
+                <data android:mimeType="application/sdp" />
+                <data android:mimeType="application/vnd.3gp*" />
+                <data android:mimeType="application/vnd.apple.mpegurl" />
+                <data android:mimeType="application/vnd.dvd*" />
+                <data android:mimeType="application/vnd.dolby*" />
+                <data android:mimeType="application/vnd.rn-realmedia*" />
+                <data android:mimeType="application/x-iso9660-image" />
+                <data android:mimeType="application/x-extension-mp4" />
+                <data android:mimeType="application/x-flac" />
+                <data android:mimeType="application/x-matroska" />
+                <data android:mimeType="application/x-mpegurl" />
+                <data android:mimeType="application/x-ogg" />
+                <data android:mimeType="application/x-quicktimeplayer" />
+                <data android:mimeType="application/x-shockwave-flash" />
+                <data android:mimeType="application/xspf+xml" />
+                <data android:mimeType="misc/ultravox" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="video/*" />
+                <data android:mimeType="audio/*" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name="me.aap.fermata.media.service.FermataMediaService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback"
+            android:icon="@drawable/media_service_icon"
+            android:label="@string/media_service_name"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="me.aap.fermata.action.MediaService" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name="me.aap.fermata.ui.glass.nav.AutomotiveNavNotificationService"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name="me.aap.fermata.ui.glass.speedo.TripTrackingService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <receiver
+            android:name="androidx.media.session.MediaButtonReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".media.lib.AtvUpdateReceiver" />
+
+        <provider
+            android:name="me.aap.fermata.provider.FermataContentProvider"
+            android:authorities="${applicationId}"
+            android:exported="true"
+            android:grantUriPermissions="true"
+            android:writePermission="${applicationId}.permission.WRITE_FERMATA_CONTENT"
+            tools:ignore="ExportedContentProvider" />
+
+        <provider
+            android:name="me.aap.fermata.provider.DiagnosticsFileProvider"
+            android:authorities="${applicationId}.DiagnosticsFileProvider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/diagnostics_file_paths" />
+        </provider>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.FileProvider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/car_finder_file_paths" />
+        </provider>
+    </application>
+
+</manifest>

@@ -1,0 +1,126 @@
+name: Build Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      allow_test_signing:
+        description: 'Allow test signing if release secrets are missing'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-release:
+    name: Build FermataEX Release Universal APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      NO_GS: true
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: >-
+            platform-tools
+            platforms;android-36
+            build-tools;36.0.0
+            ndk;29.0.14206865
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Configure signing credentials
+        id: signing
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.FERMATAX_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.FERMATAX_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.FERMATAX_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.FERMATAX_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -n "${KEYSTORE_BASE64:-}" ] && [ -n "${STORE_PASSWORD:-}" ] && [ -n "${KEY_ALIAS:-}" ] && [ -n "${KEY_PASSWORD:-}" ]; then
+            echo "Using configured repository release signing secrets"
+            mkdir -p "$HOME/.keystores"
+            echo "$KEYSTORE_BASE64" | base64 -d > "$HOME/.keystores/release.keystore"
+            echo "FERMATAX_STORE_FILE=$HOME/.keystores/release.keystore" >> "$GITHUB_ENV"
+            echo "FERMATAX_STORE_PASSWORD=$STORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "FERMATAX_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+            echo "FERMATAX_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+            echo "has_prod_signing=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No repository release signing secrets found; enabling test release build mode"
+            echo "ALLOW_LEGACY_TEST_SIGNING=true" >> "$GITHUB_ENV"
+            echo "APP_ID_SFX=.test" >> "$GITHUB_ENV"
+            mkdir -p "$HOME/.keystores"
+            keytool -genkeypair -v -keystore "$HOME/.keystores/test_release.keystore" \
+              -alias fermata_test -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass android -keypass android \
+              -dname "CN=FermataEX Test, O=Android, C=US"
+            echo "FERMATAX_STORE_FILE=$HOME/.keystores/test_release.keystore" >> "$GITHUB_ENV"
+            echo "FERMATAX_STORE_PASSWORD=android" >> "$GITHUB_ENV"
+            echo "FERMATAX_KEY_ALIAS=fermata_test" >> "$GITHUB_ENV"
+            echo "FERMATAX_KEY_PASSWORD=android" >> "$GITHUB_ENV"
+            echo "has_prod_signing=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build universal release APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x ./build.sh
+          ./build.sh
+          mapfile -t apks < <(find dist -maxdepth 1 -type f -name 'FermataX-*.apk' -o -name 'FermataEX-*.apk' -print)
+          if [ "${#apks[@]}" -eq 0 ]; then
+            echo "Looking for any generated universal release APK in build outputs..."
+            mapfile -t fallback_apks < <(find fermata/build/outputs/apk_from_bundle -type f -name '*.apk' -print)
+            if [ "${#fallback_apks[@]}" -gt 0 ]; then
+              mkdir -p dist
+              cp "${fallback_apks[0]}" dist/FermataEX-release-universal.apk
+            else
+              echo "Error: No release APK found"
+              exit 1
+            fi
+          else
+            cp "${apks[0]}" dist/FermataEX-release-universal.apk
+          fi
+          ls -la dist/
+
+      - name: Upload release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FermataEX-release-universal-apk
+          path: dist/FermataEX-release-universal.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/FermataEX-release-universal.apk
+          generate_release_notes: true
+          draft: false
+          prerelease: false
