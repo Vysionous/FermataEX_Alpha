@@ -52,6 +52,7 @@ jobs:
       - name: Verify Java and Gradle toolchain
         run: |
           java -version
+          chmod +x ./gradlew
           ./gradlew --version
 
       - name: Validate universal build entry point

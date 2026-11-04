@@ -44,6 +44,7 @@ CMAKE_PATH="$(find $ANDROID_SDK_ROOT/cmake/* -maxdepth 1 -type d -name bin | sor
 echo "CMAKE_PATH=$CMAKE_PATH"
 export PATH=$CMAKE_PATH:$PATH
 cd "$DIR"
+[ -f "$DIR/gradlew" ] && chmod +x "$DIR/gradlew" 2>/dev/null || true
 
 # Distribution contract: FermataX is one app/package for phone and Android Auto.
 # Gradle keeps its platform source sets internally, but this script must never publish
