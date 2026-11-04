@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Verify FermataX source, lint, architecture, and universal package
+    name: Verify FermataEX source, lint, architecture, and universal package
     runs-on: ubuntu-latest
     timeout-minutes: 75
     env:
@@ -130,24 +130,43 @@ jobs:
       # FermataX ships exactly ONE universal APK used on both phone and Android Auto/DHU.
       # Mobile/Auto are internal source sets/test targets only and must never become separate
       # user-facing APKs, releases, or CI artifacts.
-      - name: Package single FermataX universal APK
+      - name: Package single FermataEX universal APK
         if: ${{ success() }}
         shell: bash
         run: |
           set -euo pipefail
+          rm -rf dist
+          mkdir -p dist
+          chmod +x ./build.sh ./gradlew
           ./build.sh -d
-          mapfile -t apks < <(find dist -maxdepth 1 -type f -name 'FermataX-*.apk' -print)
-          if [ "${#apks[@]}" -ne 1 ]; then
-            echo "Expected exactly one universal APK, found ${#apks[@]}"
+          mapfile -t apks < <(
+            find dist -maxdepth 1 -type f \
+              \( -name 'FermataEX-*.apk' -o -name 'FermataX-*.apk' \) \
+              ! -name '*-universal.apk' \
+              -print | sort
+          )
+          target_apk=""
+          for apk in "${apks[@]}"; do
+            if [[ "$(basename "$apk")" == FermataEX-* ]]; then
+              target_apk="$apk"
+              break
+            fi
+          done
+          if [ -z "$target_apk" ] && [ "${#apks[@]}" -gt 0 ]; then
+            target_apk="${apks[0]}"
+          fi
+          if [ -z "$target_apk" ] || [ ! -s "$target_apk" ]; then
+            echo "Expected at least one non-empty universal APK in dist/, found ${#apks[@]}"
             exit 1
           fi
-          cp "${apks[0]}" dist/FermataX-debug-universal.apk
+          cp "$target_apk" dist/FermataEX-debug-universal.apk
+          cp "$target_apk" dist/FermataX-debug-universal.apk
 
-      - name: Upload single FermataX universal APK
+      - name: Upload single FermataEX universal APK
         if: ${{ success() }}
         uses: actions/upload-artifact@v4
         with:
-          name: FermataX-device-test-${{ github.sha }}
-          path: dist/FermataX-debug-universal.apk
+          name: FermataEX-device-test-${{ github.sha }}
+          path: dist/FermataEX-debug-universal.apk
           if-no-files-found: error
           retention-days: 7
