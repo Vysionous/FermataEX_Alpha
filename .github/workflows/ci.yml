@@ -162,7 +162,7 @@ jobs:
           cp "$target_apk" dist/FermataEX-debug-universal.apk
           cp "$target_apk" dist/FermataX-debug-universal.apk
 
-      - name: Upload single FermataEX universal APK
+      - name: Upload single FermataX universal APK
         if: ${{ success() }}
         uses: actions/upload-artifact@v4
         with:
