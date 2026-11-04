@@ -51,7 +51,7 @@ cd "$DIR"
 # separate Mobile/Auto or ABI-specific APK products. APK builds are one universal package.
 build() {
   local ext="$TASK"
-  local app_flavor=${APP_ID_SFX:-$(grep -oP "${TASK}Flavor=\K.+" "$DIR/local.properties"  2>/dev/null || true)}
+  local app_flavor=${APP_FLAVOR:-$(grep -oP "${TASK}Flavor=\K.+" "$DIR/local.properties"  2>/dev/null || true)}
   local app_sfx=${APP_ID_SFX:-$(grep -oP "${TASK}IdSfx=\K.+" "$DIR/local.properties"  2>/dev/null || true)}
   [ -z "$app_sfx" ] || local app_sfx="-PAPP_ID_SFX=$app_sfx"
   if [ "$TASK" = 'apk' ]; then

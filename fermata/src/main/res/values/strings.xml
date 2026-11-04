@@ -717,12 +717,12 @@
     <string name="speedo_background_restricted">System stopped FermataX in the background. Open FermataX on your phone to remove battery restrictions.</string>
 
     <!-- External video handoff strings -->
-    <string name="external_play_dispatched_car">Playing on Android Auto</string>
-    <string name="external_play_car_unavailable_phone">Car display unavailable. Playing on phone.</string>
-    <string name="external_play_car_not_ready_phone">Car display not ready. Playing on phone.</string>
-    <string name="external_play_err_missing_media">No playable media found in external request.</string>
-    <string name="external_play_err_inaccessible">Cannot access media file.</string>
-    <string name="external_play_err_multiple_items">Playing multiple items from external apps is not supported.</string>
-    <string name="external_play_err_unsupported_format">Unsupported video or audio format.</string>
+    <string name="external_play_dispatched_car" translatable="false">Playing on Android Auto</string>
+    <string name="external_play_car_unavailable_phone" translatable="false">Car display unavailable. Playing on phone.</string>
+    <string name="external_play_car_not_ready_phone" translatable="false">Car display not ready. Playing on phone.</string>
+    <string name="external_play_err_missing_media" translatable="false">No playable media found in external request.</string>
+    <string name="external_play_err_inaccessible" translatable="false">Cannot access media file.</string>
+    <string name="external_play_err_multiple_items" translatable="false">Playing multiple items from external apps is not supported.</string>
+    <string name="external_play_err_unsupported_format" translatable="false">Unsupported video or audio format.</string>
 </resources>
 
