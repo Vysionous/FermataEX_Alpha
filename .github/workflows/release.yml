@@ -59,10 +59,20 @@ jobs:
           STORE_PASSWORD: ${{ secrets.FERMATAX_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.FERMATAX_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.FERMATAX_KEY_PASSWORD }}
+          EVENT_NAME: ${{ github.event_name }}
+          ALLOW_TEST_SIGNING: ${{ inputs.allow_test_signing }}
         run: |
           set -euo pipefail
-          if [ -n "${KEYSTORE_BASE64:-}" ] && [ -n "${STORE_PASSWORD:-}" ] && [ -n "${KEY_ALIAS:-}" ] && [ -n "${KEY_PASSWORD:-}" ]; then
-            echo "Using configured repository release signing secrets"
+
+          has_keystore=0; [ -n "${KEYSTORE_BASE64:-}" ] && has_keystore=1
+          has_store_pass=0; [ -n "${STORE_PASSWORD:-}" ] && has_store_pass=1
+          has_alias=0; [ -n "${KEY_ALIAS:-}" ] && has_alias=1
+          has_key_pass=0; [ -n "${KEY_PASSWORD:-}" ] && has_key_pass=1
+
+          count=$((has_keystore + has_store_pass + has_alias + has_key_pass))
+
+          if [ "$count" -eq 4 ]; then
+            echo "Using configured repository release signing secrets."
             mkdir -p "$HOME/.keystores"
             echo "$KEYSTORE_BASE64" | base64 -d > "$HOME/.keystores/release.keystore"
             echo "FERMATAX_STORE_FILE=$HOME/.keystores/release.keystore" >> "$GITHUB_ENV"
@@ -70,8 +80,22 @@ jobs:
             echo "FERMATAX_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
             echo "FERMATAX_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
             echo "has_prod_signing=true" >> "$GITHUB_OUTPUT"
+          elif [ "$count" -gt 0 ]; then
+            echo "::error::Partial production signing credentials supplied ($count of 4). All four FERMATAX secrets (FERMATAX_KEYSTORE_BASE64, FERMATAX_STORE_PASSWORD, FERMATAX_KEY_ALIAS, FERMATAX_KEY_PASSWORD) must be configured."
+            exit 1
           else
-            echo "No repository release signing secrets found; enabling test release build mode"
+            if [ "$EVENT_NAME" != "workflow_dispatch" ]; then
+              echo "::error::Tag-triggered releases require production signing credentials. Test signing is only permitted for manual workflow_dispatch runs."
+              exit 1
+            fi
+
+            if [ "${ALLOW_TEST_SIGNING:-true}" != "true" ]; then
+              echo "::error::No production signing credentials found and allow_test_signing is set to false."
+              exit 1
+            fi
+
+            echo "No repository release signing secrets found; manual dispatch allows test signing."
+            echo "WARNING: Using ephemeral test keystore. Its signature will change between builds and does not provide a stable upgrade identity."
             echo "ALLOW_LEGACY_TEST_SIGNING=true" >> "$GITHUB_ENV"
             echo "APP_ID_SFX=.test" >> "$GITHUB_ENV"
             mkdir -p "$HOME/.keystores"
@@ -90,22 +114,44 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          rm -rf dist
+          mkdir -p dist
           chmod +x ./build.sh ./gradlew
           ./build.sh
-          mapfile -t apks < <(find dist -maxdepth 1 -type f -name 'FermataX-*.apk' -o -name 'FermataEX-*.apk' -print)
-          if [ "${#apks[@]}" -eq 0 ]; then
+          mapfile -t apks < <(
+            find dist -maxdepth 1 -type f \
+              \( -name 'FermataEX-*.apk' -o -name 'FermataX-*.apk' \) \
+              ! -name 'FermataEX-release-universal.apk' \
+              -print | sort
+          )
+          target_apk=""
+          for apk in "${apks[@]}"; do
+            if [[ "$(basename "$apk")" == FermataEX-* ]]; then
+              target_apk="$apk"
+              break
+            fi
+          done
+          if [ -z "$target_apk" ] && [ "${#apks[@]}" -gt 0 ]; then
+            target_apk="${apks[0]}"
+          fi
+
+          if [ -z "$target_apk" ]; then
             echo "Looking for any generated universal release APK in build outputs..."
-            mapfile -t fallback_apks < <(find fermata/build/outputs/apk_from_bundle -type f -name '*.apk' -print)
+            mapfile -t fallback_apks < <(find fermata/build/outputs/apk_from_bundle -type f -name 'fermata-*.apk' -print | sort)
             if [ "${#fallback_apks[@]}" -gt 0 ]; then
-              mkdir -p dist
-              cp "${fallback_apks[0]}" dist/FermataEX-release-universal.apk
+              target_apk="${fallback_apks[0]}"
             else
-              echo "Error: No release APK found"
+              echo "::error::No release APK found in dist/ or fermata/build/outputs/apk_from_bundle"
               exit 1
             fi
-          else
-            cp "${apks[0]}" dist/FermataEX-release-universal.apk
           fi
+
+          if [ ! -s "$target_apk" ]; then
+            echo "::error::Selected APK is empty: $target_apk"
+            exit 1
+          fi
+
+          cp "$target_apk" dist/FermataEX-release-universal.apk
           ls -la dist/
 
       - name: Upload release APK artifact
